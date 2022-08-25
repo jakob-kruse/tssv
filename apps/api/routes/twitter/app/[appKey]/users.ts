@@ -9,28 +9,37 @@ export default defineEventHandler(async (event) => {
     .safeParse(event.context.params);
 
   if (paramsRes.success === false) {
-    return createError({
-      statusCode: 400,
-      message: paramsRes.error.message,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: paramsRes.error.message,
+      })
+    );
   }
 
   const twitterAppRes = await TwitterApp.load(paramsRes.data.appKey);
 
   if (twitterAppRes.isErr()) {
-    return createError({
-      statusCode: 400,
-      message: twitterAppRes.error,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: twitterAppRes.error,
+      })
+    );
   }
 
   const usersRes = await twitterAppRes.value.getAuthorizedUsers();
 
   if (usersRes.isErr()) {
-    return createError({
-      statusCode: 400,
-      message: usersRes.error,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: usersRes.error,
+      })
+    );
   }
 
   return usersRes.value;

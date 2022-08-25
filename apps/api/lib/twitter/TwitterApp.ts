@@ -16,8 +16,8 @@ export const TwitterAppCredentialsSchema = z.object({
 export type TwitterAppCredentials = z.infer<typeof TwitterAppCredentialsSchema>;
 
 export const TemporaryOAuthCredentialsSchema = z.object({
-  oauthToken: z.string().min(1),
-  oauthTokenSecret: z.string().min(1),
+  accessToken: z.string().min(1),
+  accessTokenSecret: z.string().min(1),
 });
 
 export type TemporaryOAuthCredentials = z.infer<
@@ -51,7 +51,7 @@ function getPersistentOAuthCredentialsKey(appKey: string, oauthToken?: string) {
 }
 
 function getTemporaryOAuthCredentialsKey(
-  oAuthToken: TemporaryOAuthCredentials["oauthToken"]
+  oAuthToken: TemporaryOAuthCredentials["accessToken"]
 ) {
   return `main:twitter:temporary_oauth_credentials:${oAuthToken}`;
 }
@@ -113,18 +113,27 @@ export class TwitterApp {
 
     const temporaryOAuthCredentialsKey =
       getTemporaryOAuthCredentialsKey(oAuthToken);
-    if (
-      oAuthToken &&
-      (await useStorage().hasItem(temporaryOAuthCredentialsKey))
-    ) {
-      const temporaryOAuthCredentials = await useStorage().getItem(
-        temporaryOAuthCredentialsKey
-      );
+
+    const persistentOAuthCredentialsKey = getPersistentOAuthCredentialsKey(
+      appKey,
+      oAuthToken
+    );
+
+    if (oAuthToken) {
+      const credentials =
+        (await useStorage().getItem(temporaryOAuthCredentialsKey)) ||
+        (await useStorage().getItem(persistentOAuthCredentialsKey));
+
+      if (credentials === null) {
+        return err(
+          `Temporary OAuth credentials for appKey ${appKey} and oAuthToken ${oAuthToken} not found.`
+        );
+      }
 
       twitterApiCredentials = {
         ...twitterApiCredentials,
-        accessToken: temporaryOAuthCredentials.oauthToken,
-        accessSecret: temporaryOAuthCredentials.oauthTokenSecret,
+        accessToken: credentials.accessToken,
+        accessSecret: credentials.accessTokenSecret,
       };
     }
 
@@ -158,8 +167,8 @@ export class TwitterApp {
     }
 
     await useStorage().setItem(key, {
-      oauthToken: authLinkRes.oauth_token,
-      oauthTokenSecret: authLinkRes.oauth_token_secret,
+      accessToken: authLinkRes.oauth_token,
+      accessTokenSecret: authLinkRes.oauth_token_secret,
       ...this.credentials,
     });
 
@@ -204,15 +213,15 @@ export class TwitterApp {
     }
 
     const temporaryOAuthCredentials: {
-      oauthToken: TemporaryOAuthCredentials["oauthToken"];
-      oauthTokenSecret: TemporaryOAuthCredentials["oauthTokenSecret"];
+      accessToken: TemporaryOAuthCredentials["accessToken"];
+      accessTokenSecret: TemporaryOAuthCredentials["accessTokenSecret"];
       appKey: TwitterAppCredentials["appKey"];
       appSecret: TwitterAppCredentials["appSecret"];
     } = await useStorage().getItem(key);
 
     const twitterAppRes = await TwitterApp.load(
       temporaryOAuthCredentials.appKey,
-      temporaryOAuthCredentials.oauthToken
+      temporaryOAuthCredentials.accessToken
     );
 
     if (twitterAppRes.isErr()) {
@@ -268,5 +277,9 @@ export class TwitterApp {
     );
 
     return ok(prefixRemoved);
+  }
+
+  getClient() {
+    return this.twitterClient;
   }
 }

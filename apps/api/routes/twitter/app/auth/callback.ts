@@ -10,19 +10,25 @@ export default defineEventHandler(async (event) => {
     .safeParse(useQuery(event));
 
   if (queryRes.success === false) {
-    return createError({
-      statusCode: 400,
-      message: queryRes.error.message,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: queryRes.error.message,
+      })
+    );
   }
 
   const authRes = await TwitterApp.handleCallback(queryRes.data);
 
   if (authRes.isErr()) {
-    return createError({
-      statusCode: 400,
-      message: authRes.error,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: authRes.error,
+      })
+    );
   }
 
   return true;

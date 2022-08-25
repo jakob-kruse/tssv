@@ -9,10 +9,13 @@ export default defineEventHandler(async (event) => {
   );
 
   if (appCredentialsRes.success === false) {
-    return createError({
-      statusCode: 400,
-      message: appCredentialsRes.error.message,
-    });
+    return sendError(
+      event,
+      createError({
+        statusCode: 400,
+        message: appCredentialsRes.error.message,
+      })
+    );
   }
 
   return await TwitterApp.create(appCredentialsRes.data);
