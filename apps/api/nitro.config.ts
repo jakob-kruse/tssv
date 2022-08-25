@@ -1,8 +1,8 @@
 import { defineNitroConfig } from "nitropack";
 
 export default defineNitroConfig({
-  storage: {
-    fs: {
+  devStorage: {
+    main: {
       driver: "fs",
       base: "./data/fs",
     },
