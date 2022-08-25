@@ -1,0 +1,25 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nitropack dev",
+    "build": "nitropack build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nitropack": "^0.4.24"
+  },
+  "dependencies": {
+    "c12": "^0.2.9",
+    "cuid": "^2.1.8",
+    "h3": "^0.7.16",
+    "neverthrow": "^5.0.0",
+    "twitter-api-v2": "^1.12.5",
+    "unstorage": "^0.5.6",
+    "zod": "^3.18.0"
+  }
+}
